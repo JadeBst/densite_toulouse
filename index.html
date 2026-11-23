@@ -27,6 +27,8 @@ button.on{background:#111;color:#fff}
 .omb span{display:block;width:14px;height:14px;border:2px solid #1f4e8c;transform:rotate(45deg)}
 .nolab .allp,.nolab .irisl{display:none}
 .leaflet-control-layers{font:13px "Bricolage Grotesque",sans-serif;border:1px solid #111!important;border-radius:0!important}
+.phs{display:flex;gap:6px;margin:0 0 6px}.phs figure{margin:0;width:200px}.phs img{display:block;width:200px;height:150px;object-fit:cover}.phs figcaption{font-size:12px;margin-top:2px}
+.ph{display:block;width:220px;height:auto;max-height:280px;object-fit:cover;margin:0 0 6px}
 .leaflet-tooltip.iris{font:13px "Bricolage Grotesque",sans-serif}
 @media(max-width:600px){.panel{max-width:none;right:12px;top:auto;bottom:24px}}
 @media print{.ctl,#msg{display:none}}
@@ -78,6 +80,8 @@ const OMBRES=[
  ["Place Arnaud-Bernard","Pergola métallique + voile d'ombrage, plantes grimpantes","500 m²","2025–2026","P",43.610863,1.439158,0],
  ["Port Saint-Sauveur","Nouvelle ombrière pérenne, berges du canal du Midi","n.c.","2026","P",43.5961559,1.4556626,0]
 ];
+/* Photos multiples : nom du lieu → [fichier, légende] ; sinon photos/<nom-du-lieu>.jpg */
+const PHOTOS={"Place du Capitole":[["place-du-capitole-avec.jpg","Avec ombrière"],["place-du-capitole-sans.jpg","Sans ombrière"]]};
 const COLORS=["#fef0d9","#fdcc8a","#fc8d59","#e34a33","#b30000"];
 </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -92,9 +96,10 @@ const ctrl=L.control.layers(null,{"Densité de population":gDens,"Noms des quart
 /* étiquettes visibles seulement quand on zoome assez */
 const lab=()=>map.getContainer().classList.toggle('nolab',map.getZoom()<15);map.on('zoomend',lab);lab();
 const ST={P:["pérenne","#1f4e8c",1],S:["saisonnier (juin–sept.)","#6fa0d8",1],T:["temporaire","#ffffff",1],"?":["statut non précisé","#b9c9dc",1]};
-OMBRES.forEach(([n,t,s,a,st,la,lo,ap])=>{const [lib,col]=ST[st];
+const slug=n=>n.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+OMBRES.forEach(([n,t,s,a,st,la,lo,ap])=>{const [lib,col]=ST[st],f='photos/'+slug(n)+'.jpg';
  L.marker([la,lo],{icon:L.divIcon({className:'omb',html:`<span style="background:${col}"></span>`,iconSize:[14,14]})}).addTo(gOmb)
-  .bindTooltip(`<b>${n}</b><br>${t}<br>${s} · ${a} · ${lib}${ap?'<br><i>position approximative</i>':''}`,{className:'iris',direction:'top',offset:[0,-6]});});
+  .bindTooltip(`${PHOTOS[n]?'<div class="phs">'+PHOTOS[n].map(([x,c])=>`<figure><img src="photos/${x}" alt="${c}" onerror="this.parentNode.remove()"><figcaption>${c}</figcaption></figure>`).join('')+'</div>':`<img class="ph" src="${f}" alt="" onerror="this.remove()">`}<b>${n}</b><br>${t}<br>${s} · ${a} · ${lib}${ap?'<br><i>position approximative</i>':''}`,{className:'iris',direction:'top',offset:[0,-6]});});
 PLACES.forEach(([n,la,lo])=>{
  L.circleMarker([la,lo],{radius:7,color:'#fff',weight:2,fillColor:'#111',fillOpacity:1}).addTo(gEtud)
   .bindTooltip(n,{permanent:true,direction:'right',offset:[8,0],className:'place'});
